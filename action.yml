@@ -1,23 +1,44 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Jira Version Release'
+description: 'Release Jira version when GitHub release is created'
+author: 'journeyWorker'
 
-# Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
-  icon: 'heart'
-  color: 'red'
+  icon: 'tag'
+  color: 'blue'
 
-# Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  github-token:
+    description: 'GitHub token'
     required: true
-    default: '1000'
+  jira-host:
+    description: 'Jira host URL (e.g., "your-domain" for your-domain.atlassian.net)'
+    required: true
+  jira-email:
+    description: 'Jira account email'
+    required: true
+  jira-token:
+    description: 'Jira API token'
+    required: true
+  project-prefix:
+    description: 'Jira project prefix (e.g., "VP" for VP-123)'
+    required: true
+  jira-version-prefix:
+    description: 'Prefix to add to version names (e.g., "Mobile" for "Mobile 1.0.0")'
+    required: false
+  skip-subtask:
+    description: 'Skip subtasks when updating versions'
+    required: false
+    default: 'false'
+  skip-child:
+    description: 'Skip child issues when updating versions'
+    required: false
+    default: 'false'
 
-# Define your outputs here.
 outputs:
-  time:
-    description: 'Your output description here'
+  jira_issue_keys:
+    description: 'List of Jira issue keys that were updated'
+  fail_jira_issue_keys:
+    description: 'List of Jira issue keys that failed to update'
 
 runs:
   using: node20
