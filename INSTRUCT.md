@@ -64,12 +64,18 @@ need to perform some initial setup steps before you can develop your action.
    ```bash
    $ npm test
 
-   PASS  ./index.test.js
-     ✓ throws invalid number (3ms)
-     ✓ wait 500 ms (504ms)
-     ✓ test runs (95ms)
+   # This will start Vitest in watch mode. For CI environments use:
+   $ npm run ci-test
 
-   ...
+    ✓ src/main.test.ts (1)
+      ✓ wait 500 ms
+      ✓ test runs
+      ✓ throws invalid number
+
+   Test Files  1 passed (1)
+        Tests  3 passed (3)
+     Start at  XX:XX:XX
+     Duration  XXXX
    ```
 
 ## Update the Action Metadata
@@ -117,7 +123,8 @@ So, what are you waiting for? Go ahead and start customizing your action!
    ```
 
 1. Replace the contents of `src/` with your action code
-1. Add tests to `__tests__/` for your source code
+1. Add tests to `src/` alongside your source code (following the `.test.ts`
+   naming convention)
 1. Format, test, and build the action
 
    ```bash

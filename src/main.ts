@@ -246,13 +246,15 @@ export async function validateAndFilterIssues(
   skipChild: boolean
 ): Promise<Issue[]> {
   const issues = await Promise.all(
-    issueKeys.map(key =>
-      jira.getIssue(key).catch(e => {
+    issueKeys.map(async key => {
+      try {
+        return await jira.getIssue(key)
+      } catch (e: any) {
         console.warn(`Failed to get issue ${key}: ${e.message}`)
         core.warning(`Failed to get issue ${key}: ${e.message}`)
-        return new Issue('', false, [])
-      })
-    )
+        return Promise.resolve(new Issue('', false, []))
+      }
+    })
   )
 
   return issues.filter(issue => {

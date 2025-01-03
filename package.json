@@ -26,7 +26,8 @@
   },
   "scripts": {
     "bundle": "npm run format:write && npm run package",
-    "ci-test": "vitest run",
+    "ci-test": "vitest run --run",
+    "ci-coverage": "vitest run --run --coverage && npx make-coverage-badge --output-path ./badges/coverage.svg",
     "coverage": "vitest run --coverage && npx make-coverage-badge --output-path ./badges/coverage.svg",
     "format:write": "npx prettier --write .",
     "format:check": "npx prettier --check .",
@@ -35,7 +36,7 @@
     "package": "npx ncc build src/index.ts -o dist --source-map --license licenses.txt",
     "package:watch": "npm run package -- --watch",
     "test": "vitest",
-    "all": "npm run format:write && npm run lint && npm run test && npm run coverage && npm run package"
+    "all": "npm run format:write && npm run lint && npm run ci-test && npm run ci-coverage && npm run package"
   },
   "license": "MIT",
   "dependencies": {

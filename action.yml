@@ -11,7 +11,8 @@ inputs:
     description: 'GitHub token'
     required: true
   jira-host:
-    description: 'Jira host URL (e.g., "your-domain" for your-domain.atlassian.net)'
+    description:
+      'Jira host URL (e.g., "your-domain" for your-domain.atlassian.net)'
     required: true
   jira-email:
     description: 'Jira account email'
@@ -23,7 +24,8 @@ inputs:
     description: 'Jira project prefix (e.g., "VP" for VP-123)'
     required: true
   jira-version-prefix:
-    description: 'Prefix to add to version names (e.g., "Mobile" for "Mobile 1.0.0")'
+    description:
+      'Prefix to add to version names (e.g., "Mobile" for "Mobile 1.0.0")'
     required: false
   skip-subtask:
     description: 'Skip subtasks when updating versions'
