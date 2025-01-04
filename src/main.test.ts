@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import ky from 'ky'
+import got from 'got'
 import {
   run,
   Issue,
@@ -13,14 +13,14 @@ import {
 } from './main.js'
 
 type GitHub = ReturnType<typeof github.getOctokit>
-// Mock ky module
+// Mock got module
 const mockGet = vi.fn()
 const mockPost = vi.fn()
 const mockPut = vi.fn()
-// Mock ky module
-vi.mock('ky', () => ({
+// Mock got module
+vi.mock('got', () => ({
   default: {
-    create: () => ({
+    extend: () => ({
       get: (url: string) => {
         return {
           json: async () => {
@@ -496,7 +496,7 @@ describe('Jira Release Action', () => {
     }
     vi.mocked(github.getOctokit).mockReturnValue(mockOctokit as any)
 
-    // Mock ky responses
+    // Mock got responses
     mockGet.mockImplementation(url => {
       if (url.includes('/issue/')) {
         const issueKey = url.split('/').pop()
