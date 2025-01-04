@@ -70,7 +70,7 @@ git clone https://github.com/journeyWorker/jira-release.git
 cd jira-release
 ```
 
-2. Install dependencies
+1. Install dependencies
 
 ```bash
 npm install
@@ -99,3 +99,9 @@ Make sure to set up your `.env` file based on the `.env.example` template.
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 for details.
+
+## Inspiration
+
+This project was inspired by the
+[jira-issue-version-by-release-pr](https://github.com/PRNDcompany/jira-issue-version-by-release-pr)
+but it was not triggered on PR not on release events.
