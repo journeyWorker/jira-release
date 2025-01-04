@@ -1,5 +1,11 @@
 # Jira Version Release GitHub Action
 
+[![GitHub Super-Linter](https://github.com/journeyWorker/jira-release/actions/workflows/linter.yml/badge.svg)](https://github.com/super-linter/super-linter)
+![CI](https://github.com/journeyWorker/jira-release/actions/workflows/ci.yml/badge.svg)
+[![Check dist/](https://github.com/journeyWorker/jira-release/actions/workflows/check-dist.yml/badge.svg)](https://github.com/actions/typescript-action/actions/workflows/check-dist.yml)
+[![CodeQL](https://github.com/journeyWorker/jira-release/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/actions/typescript-action/actions/workflows/codeql-analysis.yml)
+[![Coverage](./badges/coverage.svg)](./badges/coverage.svg)
+
 Automatically release Jira versions when a GitHub release is created. This
 action helps synchronize your GitHub releases with Jira versions, making it
 easier to track and manage releases across both platforms.
