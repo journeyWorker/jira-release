@@ -32251,8 +32251,9 @@ class JiraClient {
     client;
     baseUrl;
     projectKey;
+    projectId;
     constructor(domain, email, token, projectKey) {
-        this.baseUrl = `https://${domain}.atlassian.net/rest/api/3`;
+        this.baseUrl = `https://${domain}/rest/api/3`;
         this.projectKey = projectKey;
         const auth = Buffer.from(`${email}:${token}`).toString('base64');
         this.client = distribution.create({
@@ -32261,6 +32262,15 @@ class JiraClient {
                 'Content-Type': 'application/json'
             }
         });
+    }
+    async init() {
+        this.projectId = await this.getProjectId(this.projectKey);
+    }
+    async getProjectId(projectKey) {
+        const response = await this.client
+            .get(`${this.baseUrl}/project/${projectKey}`)
+            .json();
+        return response.id;
     }
     async getIssue(issueKey) {
         const response = await this.client
@@ -32276,8 +32286,7 @@ class JiraClient {
                 json: {
                     name: versionName,
                     released: false,
-                    userReleaseDate: new Date().toISOString().split('T')[0],
-                    project: this.projectKey
+                    projectId: this.projectId
                 }
             });
             console.info(`Created version: ${versionName}`);
@@ -32304,8 +32313,7 @@ class JiraClient {
             // Update version to released state
             await this.client.put(`${this.baseUrl}/version/${version.id}`, {
                 json: {
-                    released: true,
-                    userReleaseDate: new Date().toISOString().split('T')[0]
+                    released: true
                 }
             });
             console.info(`Released version: ${versionName}`);
@@ -32457,6 +32465,7 @@ async function run() {
         if (!release) {
             throw new Error('No release data found in the event payload');
         }
+        await jira.init();
         const versionName = getJiraVersionName(release.tag_name, versionPrefix);
         if (!versionName) {
             throw new Error('Could not determine version name from release tag');

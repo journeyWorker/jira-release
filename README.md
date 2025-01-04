@@ -25,15 +25,20 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: read
+  pull_requests: read
+  issues: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - name: Release Jira Version
-        uses: journeyWorker/jira-release@v1
+        uses: journeyWorker/jira-release@v1.1.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          jira-host: your-domain
+          jira-host: your-domain.atlassian.net
           jira-email: ${{ secrets.JIRA_EMAIL }}
           jira-token: ${{ secrets.JIRA_API_TOKEN }}
           project-prefix: PROJ
@@ -45,7 +50,7 @@ jobs:
 | Input               | Required | Description                                                        | Default |
 | ------------------- | -------- | ------------------------------------------------------------------ | ------- |
 | github-token        | Yes      | GitHub token for accessing release information                     | -       |
-| jira-host           | Yes      | Jira host URL (e.g., "your-domain" for your-domain.atlassian.net)  | -       |
+| jira-host           | Yes      | Jira host URL                                                      |
 | jira-email          | Yes      | Jira account email                                                 | -       |
 | jira-token          | Yes      | Jira API token                                                     | -       |
 | project-prefix      | Yes      | Jira project prefix (e.g., "VP" for VP-123)                        | -       |

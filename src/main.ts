@@ -29,14 +29,14 @@ export class JiraClient {
   private client: typeof ky
   private baseUrl: string
   private projectKey: string
-
+  private projectId?: string
   constructor(
     domain: string,
     email: string,
     token: string,
     projectKey: string
   ) {
-    this.baseUrl = `https://${domain}.atlassian.net/rest/api/3`
+    this.baseUrl = `https://${domain}/rest/api/3`
     this.projectKey = projectKey
     const auth = Buffer.from(`${email}:${token}`).toString('base64')
     this.client = ky.create({
@@ -45,6 +45,16 @@ export class JiraClient {
         'Content-Type': 'application/json'
       }
     })
+  }
+  async init(): Promise<void> {
+    this.projectId = await this.getProjectId(this.projectKey)
+  }
+
+  async getProjectId(projectKey: string): Promise<string> {
+    const response = await this.client
+      .get(`${this.baseUrl}/project/${projectKey}`)
+      .json<{ id: string }>()
+    return response.id
   }
 
   async getIssue(issueKey: string): Promise<Issue> {
@@ -69,8 +79,7 @@ export class JiraClient {
         json: {
           name: versionName,
           released: false,
-          userReleaseDate: new Date().toISOString().split('T')[0],
-          project: this.projectKey
+          projectId: this.projectId
         }
       })
       console.info(`Created version: ${versionName}`)
@@ -102,8 +111,7 @@ export class JiraClient {
       // Update version to released state
       await this.client.put(`${this.baseUrl}/version/${version.id}`, {
         json: {
-          released: true,
-          userReleaseDate: new Date().toISOString().split('T')[0]
+          released: true
         }
       })
       console.info(`Released version: ${versionName}`)
@@ -286,6 +294,8 @@ export async function run(): Promise<void> {
     if (!release) {
       throw new Error('No release data found in the event payload')
     }
+
+    await jira.init()
 
     const versionName = getJiraVersionName(release.tag_name, versionPrefix)
     if (!versionName) {
