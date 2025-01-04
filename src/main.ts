@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import ky from 'ky'
+import got from 'got'
 
 export class Issue {
   readonly key: string
@@ -26,7 +26,7 @@ export class Issue {
 }
 
 export class JiraClient {
-  private client: typeof ky
+  private client: typeof got
   private baseUrl: string
   private projectKey: string
   private projectId?: string
@@ -39,7 +39,7 @@ export class JiraClient {
     this.baseUrl = `https://${domain}/rest/api/3`
     this.projectKey = projectKey
     const auth = Buffer.from(`${email}:${token}`).toString('base64')
-    this.client = ky.create({
+    this.client = got.extend({
       headers: {
         Authorization: `Basic ${auth}`,
         'Content-Type': 'application/json'

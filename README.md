@@ -33,7 +33,12 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+
     steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
       - name: Release Jira Version
         uses: journeyWorker/jira-release@v1.1.0
         with:
