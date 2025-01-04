@@ -288,7 +288,7 @@ describe('getPullRequestInfo', () => {
   })
 
   it('handles network errors when fetching PR', async () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(core, 'warning').mockImplementation(() => {})
     mockOctokit.rest.pulls.get.mockRejectedValue(new Error('Network error'))
 
     const result = await getPullRequestInfo(
@@ -297,7 +297,7 @@ describe('getPullRequestInfo', () => {
     )
 
     expect(result).toBeNull()
-    expect(console.warn).toHaveBeenCalledWith(
+    expect(core.warning).toHaveBeenCalledWith(
       expect.stringContaining('Failed to fetch PR info')
     )
   })
@@ -347,7 +347,7 @@ describe('extractJiraIssueKeys', () => {
   })
 
   it('handles failed PR info fetches', async () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    vi.spyOn(core, 'warning').mockImplementation(() => {})
     mockOctokit.rest.pulls.get.mockRejectedValue(new Error('Failed to fetch'))
 
     const text = `
@@ -358,7 +358,7 @@ describe('extractJiraIssueKeys', () => {
 
     const result = await extractJiraIssueKeys(text, 'ABC', mockOctokit)
     expect(result).toEqual([])
-    expect(console.warn).toHaveBeenCalledWith(
+    expect(core.warning).toHaveBeenCalledWith(
       expect.stringContaining('Skipping PR due to missing info')
     )
   })
@@ -423,18 +423,24 @@ describe('JiraClient', () => {
 
   it('releases version successfully', async () => {
     mockPut.mockResolvedValue({})
-    await jiraClient.releaseVersion('1.0.0')
+    await jiraClient.releaseVersion('1.0.0', true)
     expect(mockPut).toHaveBeenCalled()
   })
 
+  it('when release false, does not call release update ', async () => {
+    mockPut.mockResolvedValue({})
+    await jiraClient.releaseVersion('1.0.0', false)
+    expect(mockPut).not.toHaveBeenCalled()
+  })
+
   it('handles version creation error', async () => {
-    vi.spyOn(core, 'debug').mockImplementation(() => {})
+    vi.spyOn(core, 'info').mockImplementation(() => {})
     const mockError = new Error('API Error')
     mockPost.mockRejectedValue(mockError)
 
     await jiraClient.createVersion('1.0.0')
 
-    expect(core.debug).toHaveBeenCalledWith(
+    expect(core.info).toHaveBeenCalledWith(
       expect.stringContaining('Failed to create version 1.0.0')
     )
   })
@@ -483,10 +489,10 @@ describe('Jira Release Action', () => {
             .fn()
             .mockImplementation(async ({ owner, repo, pull_number }) => {
               const prUrl = `https://github.com/${owner}/${repo}/pull/${pull_number}`
-              console.debug(`Fetching PR info for ${prUrl}`)
+              core.debug(`Fetching PR info for ${prUrl}`)
               const pr = mockPRs[prUrl]
               if (!pr) {
-                console.warn(`PR not found: ${prUrl}`)
+                core.warning(`PR not found: ${prUrl}`)
                 throw new Error('PR not found')
               }
               return { data: pr }

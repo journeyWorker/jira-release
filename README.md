@@ -35,12 +35,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Release Jira Version
-        uses: journeyWorker/jira-release@v1.1.0
+        uses: journeyWorker/jira-release@v1.3.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           jira-host: your-domain.atlassian.net
@@ -62,6 +58,7 @@ jobs:
 | jira-version-prefix | No       | Prefix to add to version names (e.g., "Mobile" for "Mobile 1.0.0") | -       |
 | skip-subtask        | No       | Skip subtasks when updating versions                               | false   |
 | skip-child          | No       | Skip child issues when updating versions                           | false   |
+| released            | No       | when true, the version will be released in Jira                    | false   |
 
 ## Outputs
 
@@ -74,7 +71,7 @@ jobs:
 
 ### Prerequisites
 
-- Node.js 21 or higher
+- Node.js 18 or higher
 - npm
 
 ### Setup

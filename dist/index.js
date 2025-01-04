@@ -42618,38 +42618,35 @@ class JiraClient {
                     projectId: this.projectId
                 }
             });
-            console.info(`Created version: ${versionName}`);
             core.info(`Created version: ${versionName}`);
         }
         catch (error) {
             // Version might already exist, which is fine
-            console.debug(`Failed to create version ${versionName}, it might already exist: ${error}`);
-            core.debug(`Failed to create version ${versionName}, it might already exist: ${error}`);
+            core.info(`Failed to create version ${versionName}, it might already exist: ${error}`);
         }
     }
-    async releaseVersion(versionName) {
+    async releaseVersion(versionName, released) {
         try {
-            console.debug(`Finding version ${versionName}`);
             // Find version ID first
             const response = await this.client
                 .get(`${this.baseUrl}/project/${this.projectKey}/versions`)
                 .json();
-            console.debug(`Found version`, response);
+            console.debug(`Found versions`, response);
             const version = response.find((v) => v.name === versionName);
             if (!version) {
                 throw new Error(`Version ${versionName} not found`);
             }
-            // Update version to released state
-            await this.client.put(`${this.baseUrl}/version/${version.id}`, {
-                json: {
-                    released: true
-                }
-            });
-            console.info(`Released version: ${versionName}`);
+            if (released) {
+                // Update version to released state
+                await this.client.put(`${this.baseUrl}/version/${version.id}`, {
+                    json: {
+                        released: released
+                    }
+                });
+            }
             core.info(`Released version: ${versionName}`);
         }
         catch (error) {
-            console.warn(`Failed to release version ${versionName}: ${error}`);
             core.warning(`Failed to release version ${versionName}: ${error}`);
         }
     }
@@ -42680,14 +42677,12 @@ async function getPullRequestInfo(octokit, prUrl) {
     // Example URL: https://github.com/PokemonCenter/pikabot/pull/151
     const match = prUrl.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/);
     if (!match) {
-        console.warn(`Invalid PR URL format: ${prUrl}`);
         core.warning(`Invalid PR URL format: ${prUrl}`);
         return null;
     }
     const [, owner, repo, pullNumber] = match;
     const number = parseInt(pullNumber, 10);
     try {
-        console.debug(`Fetching PR info for ${owner}/${repo}#${number}`);
         core.debug(`Fetching PR info for ${owner}/${repo}#${number}`);
         const { data: pr } = await octokit.rest.pulls.get({
             owner,
@@ -42695,11 +42690,9 @@ async function getPullRequestInfo(octokit, prUrl) {
             pull_number: number
         });
         if (!pr) {
-            console.warn(`PR not found: ${prUrl}`);
             core.warning(`PR not found: ${prUrl}`);
             return null;
         }
-        console.debug(`Found PR: ${pr.title}`);
         core.debug(`Found PR: ${pr.title}`);
         return {
             title: pr.title,
@@ -42707,7 +42700,6 @@ async function getPullRequestInfo(octokit, prUrl) {
         };
     }
     catch (error) {
-        console.warn(`Failed to fetch PR info for ${prUrl}: ${error}`);
         core.warning(`Failed to fetch PR info for ${prUrl}: ${error}`);
         return null;
     }
@@ -42720,17 +42712,14 @@ async function extractJiraIssueKeys(text, projectPrefix, octokit) {
     // First check the release notes itself
     const releaseNoteMatches = text.match(jiraRegex) || [];
     releaseNoteMatches.forEach(match => {
-        console.debug(`Found issue key in release notes: ${match}`);
         core.debug(`Found issue key in release notes: ${match}`);
         issueSet.add(match);
     });
     // Then check each PR
     for (const prUrl of prUrls) {
-        console.debug(`Processing PR: ${prUrl}`);
         core.debug(`Processing PR: ${prUrl}`);
         const prInfo = await getPullRequestInfo(octokit, prUrl);
         if (!prInfo) {
-            console.warn(`Skipping PR due to missing info: ${prUrl}`);
             core.warning(`Skipping PR due to missing info: ${prUrl}`);
             continue;
         }
@@ -42739,18 +42728,15 @@ async function extractJiraIssueKeys(text, projectPrefix, octokit) {
         const bodyMatches = prInfo.body.match(jiraRegex) || [];
         // Add all matches to the set
         titleMatches.forEach(match => {
-            console.debug(`Found issue key in PR title: ${match}`);
             core.debug(`Found issue key in PR title: ${match}`);
             issueSet.add(match);
         });
         bodyMatches.forEach(match => {
-            console.debug(`Found issue key in PR body: ${match}`);
             core.debug(`Found issue key in PR body: ${match}`);
             issueSet.add(match);
         });
     }
     const result = [...issueSet].sort();
-    console.info(`Found Jira issues: ${result.join(', ')}`);
     core.info(`Found Jira issues: ${result.join(', ')}`);
     return result;
 }
@@ -42760,7 +42746,6 @@ async function validateAndFilterIssues(jira, issueKeys, versionName, skipSubtask
             return await jira.getIssue(key);
         }
         catch (e) {
-            console.warn(`Failed to get issue ${key}: ${e.message}`);
             core.warning(`Failed to get issue ${key}: ${e.message}`);
             return Promise.resolve(new Issue('', false, []));
         }
@@ -42786,6 +42771,7 @@ async function run() {
         const versionPrefix = core.getInput('jira-version-prefix');
         const skipSubtask = core.getInput('skip-subtask') === 'true';
         const skipChild = core.getInput('skip-child') === 'true';
+        const released = core.getInput('released') === 'true';
         const octokit = github.getOctokit(token);
         const jiraEmail = core.getInput('jira-email', { required: true });
         const jira = new JiraClient(jiraDomain, jiraEmail, jiraToken, projectPrefix);
@@ -42799,16 +42785,13 @@ async function run() {
         if (!versionName) {
             throw new Error('Could not determine version name from release tag');
         }
-        console.info(`Processing version: ${versionName}`);
         core.info(`Processing version: ${versionName}`);
         // Extract Jira issues from release body and PRs
         const issueKeys = await extractJiraIssueKeys(release.body, projectPrefix, octokit);
         if (issueKeys.length === 0) {
-            console.info('No Jira issues found in release notes or PRs');
             core.info('No Jira issues found in release notes or PRs');
             return;
         }
-        console.info(`Found Jira issues: ${issueKeys.join(', ')}`);
         core.info(`Found Jira issues: ${issueKeys.join(', ')}`);
         // Create version first
         await jira.createVersion(versionName);
@@ -42819,28 +42802,24 @@ async function run() {
         for (const issue of issues) {
             try {
                 await jira.addVersion(issue.key, versionName);
-                console.info(`Updated version for ${issue.key}`);
                 core.info(`Updated version for ${issue.key}`);
             }
             catch (error) {
-                console.warn(`Failed to update version for ${issue.key}: ${error}`);
                 core.warning(`Failed to update version for ${issue.key}: ${error}`);
                 failedIssues.push(issue.key);
             }
         }
         // Release the version after all issues are updated
-        await jira.releaseVersion(versionName);
+        await jira.releaseVersion(versionName, released);
         // Set outputs
         core.setOutput('jira_issue_keys', issues.map(i => i.key));
         core.setOutput('fail_jira_issue_keys', failedIssues);
         if (failedIssues.length > 0) {
-            console.warn(`Failed to update some issues: ${failedIssues.join(', ')}`);
             core.warning(`Failed to update some issues: ${failedIssues.join(', ')}`);
         }
     }
     catch (error) {
         if (error instanceof Error) {
-            console.error(error.message);
             core.setFailed(error.message);
         }
     }
