@@ -51,7 +51,7 @@ jobs:
 | Input               | Required | Description                                                        | Default |
 | ------------------- | -------- | ------------------------------------------------------------------ | ------- |
 | github-token        | Yes      | GitHub token for accessing release information                     | -       |
-| jira-host           | Yes      | Jira host URL                                                      |
+| jira-host           | Yes      | Jira host URL                                                      | -       |
 | jira-email          | Yes      | Jira account email                                                 | -       |
 | jira-token          | Yes      | Jira API token                                                     | -       |
 | project-prefix      | Yes      | Jira project prefix (e.g., "VP" for VP-123)                        | -       |
