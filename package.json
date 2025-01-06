@@ -1,7 +1,7 @@
 {
   "name": "jira-release-when-github-release",
   "description": "GitHub Actions Jira Release",
-  "version": "1.3.0",
+  "version": "2.0.0",
   "author": "",
   "private": true,
   "homepage": "https://github.com/journeyWorker/jira-release",
@@ -22,7 +22,7 @@
     ".": "./dist/index.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   },
   "scripts": {
     "bundle": "npm run format:write && npm run package",

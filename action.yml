@@ -35,6 +35,12 @@ inputs:
     description: 'Skip child issues when updating versions'
     required: false
     default: 'false'
+  component:
+    description: 'Component name to add to issues'
+    required: false
+  status:
+    description: 'Status to update Jira issues to (e.g., "Done", "In Progress")'
+    required: false
 
 outputs:
   jira_issue_keys:
