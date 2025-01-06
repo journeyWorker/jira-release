@@ -2,6 +2,15 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import got from 'got'
 
+export interface IssueStatus {
+  name: string
+  id: string
+}
+
+export interface IssueComponent {
+  name: string
+}
+
 export class Issue {
   readonly key: string
   readonly project: string
@@ -9,17 +18,23 @@ export class Issue {
   readonly fixVersions: string[]
   readonly parentKey?: string
   readonly parentProject?: string
+  readonly status: IssueStatus
+  readonly components: IssueComponent[]
 
   constructor(
     key: string,
     isSubtask: boolean,
     fixVersions: string[],
+    status: IssueStatus,
+    components: IssueComponent[],
     parentKey?: string
   ) {
     this.key = key
     this.project = key.split('-')[0]
     this.isSubtask = isSubtask
     this.fixVersions = fixVersions
+    this.status = status
+    this.components = components
     this.parentKey = parentKey
     this.parentProject = parentKey?.split('-')[0]
   }
@@ -69,6 +84,8 @@ export class JiraClient {
       issueKey,
       fields.issuetype.subtask,
       fixVersions,
+      fields.status,
+      fields.components,
       fields.parent?.key
     )
   }
@@ -130,13 +147,54 @@ export class JiraClient {
       }
     })
   }
+
+  async addComponent(issueKey: string, componentName: string): Promise<void> {
+    await this.client.put(`${this.baseUrl}/issue/${issueKey}`, {
+      json: {
+        update: {
+          components: [
+            {
+              add: { name: componentName }
+            }
+          ]
+        }
+      }
+    })
+  }
+
+  async updateStatus(issueKey: string, status: string): Promise<void> {
+    // First get available transitions
+    const response = await this.client
+      .get(`${this.baseUrl}/issue/${issueKey}/transitions`)
+      .json<any>()
+
+    const transition = response.transitions.find(
+      (t: any) => t.to.name.toLowerCase() === status.toLowerCase()
+    )
+
+    if (!transition) {
+      throw new Error(
+        `Status "${status}" not found in available transitions for ${issueKey}`
+      )
+    }
+
+    // Perform the transition
+    await this.client.post(`${this.baseUrl}/issue/${issueKey}/transitions`, {
+      json: {
+        transition: {
+          id: transition.id
+        }
+      }
+    })
+    core.info(`Updated status for ${issueKey} to ${status}`)
+  }
 }
 
 export function getJiraVersionName(
   branchName: string,
   prefix?: string
 ): string | null {
-  const regex = /v?(\d+\.\d+\.\d+)/
+  const regex = /(v?\d+\.\d+\.\d+)/
   const matches = regex.exec(branchName)
   if (!matches) return null
 
@@ -243,7 +301,9 @@ export async function validateAndFilterIssues(
         return await jira.getIssue(key)
       } catch (e: any) {
         core.warning(`Failed to get issue ${key}: ${e.message}`)
-        return Promise.resolve(new Issue('', false, []))
+        return Promise.resolve(
+          new Issue('', false, [], { name: '', id: '' }, [])
+        )
       }
     })
   )
@@ -313,14 +373,26 @@ export async function run(): Promise<void> {
       skipChild
     )
 
-    // Update issues with the new version
+    // Update issues with the new version, component, and status if specified
     const failedIssues: string[] = []
+    const component = core.getInput('component')
+    const status = core.getInput('status')
+
     for (const issue of issues) {
       try {
         await jira.addVersion(issue.key, versionName)
         core.info(`Updated version for ${issue.key}`)
+
+        if (component) {
+          await jira.addComponent(issue.key, component)
+          core.info(`Added component ${component} to ${issue.key}`)
+        }
+
+        if (status) {
+          await jira.updateStatus(issue.key, status)
+        }
       } catch (error) {
-        core.warning(`Failed to update version for ${issue.key}: ${error}`)
+        core.warning(`Failed to update ${issue.key}: ${error}`)
         failedIssues.push(issue.key)
       }
     }

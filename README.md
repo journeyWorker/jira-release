@@ -36,7 +36,7 @@ jobs:
 
     steps:
       - name: Release Jira Version
-        uses: journeyWorker/jira-release@v1.3.0
+        uses: journeyWorker/jira-release@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           jira-host: your-domain.atlassian.net
@@ -44,21 +44,25 @@ jobs:
           jira-token: ${{ secrets.JIRA_API_TOKEN }}
           project-prefix: PROJ
           jira-version-prefix: Mobile # Optional
+          component: Backend # Optional
+          status: Done # Optional
 ```
 
 ## Inputs
 
-| Input               | Required | Description                                                        | Default |
-| ------------------- | -------- | ------------------------------------------------------------------ | ------- |
-| github-token        | Yes      | GitHub token for accessing release information                     | -       |
-| jira-host           | Yes      | Jira host URL                                                      | -       |
-| jira-email          | Yes      | Jira account email                                                 | -       |
-| jira-token          | Yes      | Jira API token                                                     | -       |
-| project-prefix      | Yes      | Jira project prefix (e.g., "VP" for VP-123)                        | -       |
-| jira-version-prefix | No       | Prefix to add to version names (e.g., "Mobile" for "Mobile 1.0.0") | -       |
-| skip-subtask        | No       | Skip subtasks when updating versions                               | false   |
-| skip-child          | No       | Skip child issues when updating versions                           | false   |
-| released            | No       | when true, the version will be released in Jira                    | false   |
+| Input               | Required | Description                                                         | Default |
+| ------------------- | -------- | ------------------------------------------------------------------- | ------- |
+| github-token        | Yes      | GitHub token for accessing release information                      | -       |
+| jira-host           | Yes      | Jira host URL                                                       | -       |
+| jira-email          | Yes      | Jira account email                                                  | -       |
+| jira-token          | Yes      | Jira API token                                                      | -       |
+| project-prefix      | Yes      | Jira project prefix (e.g., "VP" for VP-123)                         | -       |
+| jira-version-prefix | No       | Prefix to add to version names (e.g., "Mobile" for "Mobile v1.0.0") | -       |
+| skip-subtask        | No       | Skip subtasks when updating versions                                | false   |
+| skip-child          | No       | Skip child issues when updating versions                            | false   |
+| released            | No       | when true, the version will be released in Jira                     | false   |
+| component           | No       | Component name to add to issues                                     | -       |
+| status              | No       | Status to update Jira issues to (e.g., "Done", "In Progress")       | -       |
 
 ## Outputs
 
@@ -71,7 +75,7 @@ jobs:
 
 ### Prerequisites
 
-- Node.js 18 or higher
+- Node.js 20 or higher
 - npm
 
 ### Setup

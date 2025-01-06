@@ -42567,11 +42567,15 @@ class Issue {
     fixVersions;
     parentKey;
     parentProject;
-    constructor(key, isSubtask, fixVersions, parentKey) {
+    status;
+    components;
+    constructor(key, isSubtask, fixVersions, status, components, parentKey) {
         this.key = key;
         this.project = key.split('-')[0];
         this.isSubtask = isSubtask;
         this.fixVersions = fixVersions;
+        this.status = status;
+        this.components = components;
         this.parentKey = parentKey;
         this.parentProject = parentKey?.split('-')[0];
     }
@@ -42607,7 +42611,7 @@ class JiraClient {
             .json();
         const fields = response.fields;
         const fixVersions = fields.fixVersions.map((fixVersion) => fixVersion.name);
-        return new Issue(issueKey, fields.issuetype.subtask, fixVersions, fields.parent?.key);
+        return new Issue(issueKey, fields.issuetype.subtask, fixVersions, fields.status, fields.components, fields.parent?.key);
     }
     async createVersion(versionName) {
         try {
@@ -42663,9 +42667,41 @@ class JiraClient {
             }
         });
     }
+    async addComponent(issueKey, componentName) {
+        await this.client.put(`${this.baseUrl}/issue/${issueKey}`, {
+            json: {
+                update: {
+                    components: [
+                        {
+                            add: { name: componentName }
+                        }
+                    ]
+                }
+            }
+        });
+    }
+    async updateStatus(issueKey, status) {
+        // First get available transitions
+        const response = await this.client
+            .get(`${this.baseUrl}/issue/${issueKey}/transitions`)
+            .json();
+        const transition = response.transitions.find((t) => t.to.name.toLowerCase() === status.toLowerCase());
+        if (!transition) {
+            throw new Error(`Status "${status}" not found in available transitions for ${issueKey}`);
+        }
+        // Perform the transition
+        await this.client.post(`${this.baseUrl}/issue/${issueKey}/transitions`, {
+            json: {
+                transition: {
+                    id: transition.id
+                }
+            }
+        });
+        core.info(`Updated status for ${issueKey} to ${status}`);
+    }
 }
 function getJiraVersionName(branchName, prefix) {
-    const regex = /v?(\d+\.\d+\.\d+)/;
+    const regex = /(v?\d+\.\d+\.\d+)/;
     const matches = regex.exec(branchName);
     if (!matches)
         return null;
@@ -42747,7 +42783,7 @@ async function validateAndFilterIssues(jira, issueKeys, versionName, skipSubtask
         }
         catch (e) {
             core.warning(`Failed to get issue ${key}: ${e.message}`);
-            return Promise.resolve(new Issue('', false, []));
+            return Promise.resolve(new Issue('', false, [], { name: '', id: '' }, []));
         }
     }));
     return issues.filter(issue => {
@@ -42797,15 +42833,24 @@ async function run() {
         await jira.createVersion(versionName);
         // Validate and filter issues
         const issues = await validateAndFilterIssues(jira, issueKeys, versionName, skipSubtask, skipChild);
-        // Update issues with the new version
+        // Update issues with the new version, component, and status if specified
         const failedIssues = [];
+        const component = core.getInput('component');
+        const status = core.getInput('status');
         for (const issue of issues) {
             try {
                 await jira.addVersion(issue.key, versionName);
                 core.info(`Updated version for ${issue.key}`);
+                if (component) {
+                    await jira.addComponent(issue.key, component);
+                    core.info(`Added component ${component} to ${issue.key}`);
+                }
+                if (status) {
+                    await jira.updateStatus(issue.key, status);
+                }
             }
             catch (error) {
-                core.warning(`Failed to update version for ${issue.key}: ${error}`);
+                core.warning(`Failed to update ${issue.key}: ${error}`);
                 failedIssues.push(issue.key);
             }
         }
