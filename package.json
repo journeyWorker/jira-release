@@ -46,10 +46,10 @@
     "octokit": "^4.0.3"
   },
   "devDependencies": {
-    "@github/local-action": "^2.2.1",
+    "@github/local-action": "^2.5.0",
     "@types/node": "^22.10.5",
-    "@typescript-eslint/eslint-plugin": "^8.19.0",
-    "@typescript-eslint/parser": "^8.19.0",
+    "@typescript-eslint/eslint-plugin": "^8.19.1",
+    "@typescript-eslint/parser": "^8.19.1",
     "@vercel/ncc": "^0.38.3",
     "@vitest/coverage-v8": "^2.1.8",
     "eslint": "^8.57.0",
@@ -58,7 +58,7 @@
     "make-coverage-badge": "^1.2.0",
     "prettier": "^3.4.2",
     "prettier-eslint": "^16.3.0",
-    "typescript": "^5.7.2",
+    "typescript": "^5.7.3",
     "vitest": "^2.1.8"
   }
 }
