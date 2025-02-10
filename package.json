@@ -43,7 +43,7 @@
     "@actions/core": "^1.11.1",
     "@actions/github": "^6.0.0",
     "got": "^14.4.5",
-    "octokit": "^4.1.0"
+    "octokit": "^4.1.1"
   },
   "devDependencies": {
     "@github/local-action": "^2.5.1",
