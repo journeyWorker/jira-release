@@ -27,8 +27,7 @@ on:
 
 permissions:
   contents: read
-  pull_requests: read
-  issues: read
+  pull-requests: read
 
 jobs:
   release:
