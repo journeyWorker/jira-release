@@ -41,6 +41,10 @@ inputs:
   status:
     description: 'Status to update Jira issues to (e.g., "Done", "In Progress")'
     required: false
+  released:
+    description: 'Whether the version has been released'
+    required: false
+    default: 'true'
 
 outputs:
   jira_issue_keys:

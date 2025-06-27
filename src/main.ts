@@ -114,7 +114,7 @@ export class JiraClient {
       const response = await this.client
         .get(`${this.baseUrl}/project/${this.projectKey}/versions`)
         .json<any>()
-      console.debug(`Found versions`, response)
+      // console.debug(`Found versions`, response)
       const version = response.find((v: any) => v.name === versionName)
       if (!version) {
         throw new Error(`Version ${versionName} not found`)
